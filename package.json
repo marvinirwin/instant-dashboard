@@ -1,0 +1,15 @@
+{
+  "name": "monitor-script",
+  "version": "1.0.0",
+  "description": "",
+  "main": "run-monitor-script.js",
+  "scripts": {
+    "start": "node run-monitor-script.js"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "express": "^4.18.2",
+    "openai": "^4.11.0"
+  }
+}
