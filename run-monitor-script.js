@@ -126,5 +126,5 @@ app.get('/', async (req, res) => {
 });
 
 // Start the web server
-app.listen(*process.env.PORT || 1179, () => console.log('Server is listening on port 1179'));
+app.listen(+process.env.PORT || 1179, () => console.log('Server is listening on port 1179'));
 console.log('Server started');
