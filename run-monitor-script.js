@@ -30,7 +30,7 @@ console.log('Input script read from file');
 
 // Generate the getDebugInformation function
 let debugInfo = new Promise(async (resolve, reject) => {
-    console.log(`Generating debug information...  Navigate to http://localhost:${port} once this is finished to see the debug output`);
+    console.log(`Generating the dashboard script from the contents of ${inputScriptPath}...  `);
 
     const prompt = `
         I am going to give you the text of a script.
@@ -48,7 +48,7 @@ let debugInfo = new Promise(async (resolve, reject) => {
         The debug script you return with should have any and all information related to the state changes the input script makes.  It should be biased towards providing too much information, rather than too little.
         The script itself will output plain command line text.  
 
-        Make sure your responses are formatted with the correct amount of escaping so I can parse your function calls.
+        Make sure your responses are formatted with the correct amount of escaping so I can parse your function calls.  Dont call the executeBash script function with invalid JSON parameters!
         Make sure your responses are syntactically valid bash, don't forget to close your if blocks and loop blocks.
 
         Here is the input script.
@@ -61,14 +61,7 @@ let debugInfo = new Promise(async (resolve, reject) => {
     console.log(`Command from OpenAI: 
     ${command}
     `);
-    exec(command, (error, stdout, stderr) => {
-        if (error) {
-            console.error(`exec error: ${error}`);
-            reject(error);
-        } else {
-            resolve(stdout);
-        }
-    });
+    resolve(command);
 });
 
 async function getChatCompletion(prompt) {
@@ -81,14 +74,10 @@ async function getChatCompletion(prompt) {
     hash.update(prompt);
     const scriptHash = hash.digest('hex');
 
-    const cacheFilePath = path.join(__dirname, 'cache.json');
-    let cache = {};
+    const cacheFilePath = path.join(__dirname, `${scriptHash}.sh`);
     if (fs.existsSync(cacheFilePath)) {
-        cache = JSON.parse(fs.readFileSync(cacheFilePath, 'utf8'));
-    }
-    if (cache[scriptHash]) {
         console.log('Debug script found in cache');
-        return getReturnValueFromCompletion(cache[scriptHash]);
+        return fs.readFileSync(cacheFilePath, 'utf8');
     } else {
         const completion = await openai.chat.completions.create({
             messages: [{
@@ -109,11 +98,11 @@ async function getChatCompletion(prompt) {
                 } ,
             }],
         });
-        // Save the debug script for future use in JSON cache
-        cache[scriptHash] = completion;
-        fs.writeFileSync(cacheFilePath, JSON.stringify(cache));
-        console.log('Script analytsis response saved to cache');
-        return getReturnValueFromCompletion(completion);
+        // Save the debug script for future use in a shell script file
+        const debugScript = getReturnValueFromCompletion(completion);
+        fs.writeFileSync(cacheFilePath, debugScript);
+        console.log('Script analysis response saved to cache');
+        return debugScript;
     }
 }
 
@@ -123,11 +112,18 @@ app.get('/', async (req, res) => {
     try {
         const debugInfoResult = await debugInfo;
         console.log('Debug information generated');
-        res.send(`
-        <pre>
-        ${debugInfoResult}
-        </pre>
-        `);
+        exec(debugInfoResult, (error, stdout, stderr) => {
+            if (error) {
+                console.error(`exec error: ${error}`);
+                res.status(500).send(`Error executing debug script: ${error}`);
+            } else {
+                res.send(`
+                <pre>
+                ${stdout}
+                </pre>
+                `);
+            }
+        });
     } catch (error) {
         console.error(`Error generating debug information: ${error}`);
         res.status(500).send(`Error generating debug information: ${error}`);
@@ -135,4 +131,9 @@ app.get('/', async (req, res) => {
 });
 
 // Start the web server
-app.listen(port, () => console.log(`Server is listening on http://localhost:${port}`));
+debugInfo.then(() => {
+    app.listen(port, () => console.log(`Your dashboard is ready at http://localhost:${port}`));
+}).catch((error) => {
+    console.error(`Error generating debug information: ${error}`);
+    process.exit(1);
+});
