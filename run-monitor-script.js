@@ -8,6 +8,8 @@ const OpenAI = require('openai');
 const path = require('path');
 const crypto = require('crypto');
 
+const port = +process.env.PORT || 1179;
+
 const openai = new OpenAI({
 
 });
@@ -29,7 +31,7 @@ console.log('Input script read from file');
 
 // Generate the getDebugInformation function
 let debugInfo = new Promise(async (resolve, reject) => {
-    console.log('Generating debug information');
+    console.log(`Generating debug information...  Navigate to http://localhost:${port} once this is finished to see the debug output`);
 
     const prompt = `
         I am going to give you the text of a script.
@@ -59,6 +61,7 @@ let debugInfo = new Promise(async (resolve, reject) => {
     const confirmedCompletion = await getChatCompletion(`
     The following is supposed to be a valid bash script.  
     If any part of this bash script is invalid bash (For example markdown or other things which would show a syntax error, remove it.  If it's 100% syntactically valid, then return it unchanged.
+    Do not respond with anything that is not valid bash.
     ${command}
     `)
     console.log(command)
@@ -126,5 +129,4 @@ app.get('/', async (req, res) => {
 });
 
 // Start the web server
-app.listen(+process.env.PORT || 1179, () => console.log('Server is listening on port 1179'));
-console.log('Server started');
+app.listen(port, () => console.log(`Server is listening on http://localhost:${port}`));
