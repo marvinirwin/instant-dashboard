@@ -1,8 +1,11 @@
 {
-  "name": "monitor-script",
+  "name": "instant-dashboard",
   "version": "1.0.0",
   "description": "",
   "main": "run-monitor-script.js",
+  "bin": {
+    "instant-dashboard": "./run-monitor-script.js"
+  },
   "scripts": {
     "start": "node run-monitor-script.js"
   },
