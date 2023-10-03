@@ -49,6 +49,7 @@ let debugInfo = new Promise(async (resolve, reject) => {
         The script itself will output plain command line text.  
 
         Make sure your responses are formatted with the correct amount of escaping so I can parse your function calls.
+        Make sure your responses are syntactically valid bash, don't forget to close your if blocks and loop blocks.
 
         Here is the input script.
         ${inputScript}"
