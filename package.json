@@ -1,6 +1,6 @@
 {
   "name": "instant-dashboard",
-  "version": "1.2.2",
+  "version": "1.2.3",
   "description": "",
   "main": "run-monitor-script.js",
   "bin": {
